@@ -12,6 +12,7 @@ import commands
 from pinocchio.utils import np, zero
 from Bridge import connection
 from Bridge import kbhit
+import rospy
 
 
 mj = connection.mujoco()
@@ -59,7 +60,7 @@ DISPLAY_N = 25
 N_SIMULATION = 4000             # number of time steps simulated
 
 filename = str(os.path.dirname(os.path.abspath(__file__)))
-path = filename + '/../model/jet'
+path = filename + '/../model/jet_description'
 urdf = path + '/urdf/dyros_jet_robot.urdf'
 vector = se3.StdVec_StdString()
 vector.extend(item for item in path)
@@ -77,19 +78,22 @@ srdf = path + '/srdf/dyros_jet_robot.srdf'
 # gui = cl.gui
 # robot_display.initDisplay(loadModel=True)
 
-q = se3.getNeutralConfiguration(robot.model(), srdf, False)
+# q = se3.getNeutralConfiguration(robot.model(), srdf, False)
 # q = robot_display.model.neutralConfiguration
 # q = zero(robot_display.model.nq)
 # print(q)
+# print(len(q))
+# print(type(q))
+
+q=np.matrix(np.zeros(35)).T
 init_position = [0, 0.034906585, -0.034906585, 0.733038285, -0.6981317, -0.034906585,
                  0, -0.034906585, 0.0349065850, -0.733038285, 0.6981317, 0.034906585,
                  0, 0,
                  0.6981317008, -1.6580627893, -1.3962634016, -1.9198621771, 0, -1.2217304764, -0.1745329252,
                  -0.6981317008, 1.6580627893, 1.3962634016, 1.9198621771, 0, 1.2217304764, 0.17453292519]
-index = 7
-for i in init_position:
-    q[index] = i
-    index += 1
+
+q[7:]=np.matrix(init_position).T
+
 v = np.matrix(np.zeros(robot.nv)).transpose()  # joint velocity
 
 # robot_display.displayCollisions(False)
@@ -212,7 +216,7 @@ while (not rospy.is_shutdown()):
 
             # if i % DISPLAY_N == 0:
             #    robot_display.display(q)
-            mj.setMototState(q)
+            mj.setMototState(q[7:])
 
             time_spent = time.time() - time_start
             if(time_spent < dt):
