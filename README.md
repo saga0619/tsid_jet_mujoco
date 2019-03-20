@@ -17,7 +17,6 @@ For mujoco user, you need to edit the position of license in launch/sim.launch w
 ```sh
 roslaunch jet_python_mujoco sim.launch
 ```
-* press run button from mujoco
 
 * press 'i' key from terminal to start tsid demo
 
