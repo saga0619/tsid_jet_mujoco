@@ -85,16 +85,21 @@ srdf = path + '/srdf/dyros_jet_robot.srdf'
 # print(len(q))
 # print(type(q))
 
-q=np.matrix(np.zeros(35)).T
+# q=np.matrix(np.zeros(35)).T
 init_position = [0, 0.034906585, -0.034906585, 0.733038285, -0.6981317, -0.034906585,
                  0, -0.034906585, 0.0349065850, -0.733038285, 0.6981317, 0.034906585,
                  0, 0,
                  0.6981317008, -1.6580627893, -1.3962634016, -1.9198621771, 0, -1.2217304764, -0.1745329252,
                  -0.6981317008, 1.6580627893, 1.3962634016, 1.9198621771, 0, 1.2217304764, 0.17453292519]
 
-q[7:]=np.matrix(init_position).T
+#q[7:]=np.matrix(init_position).T
 
-v = np.matrix(np.zeros(robot.nv)).transpose()  # joint velocity
+q = np.matrix(mj.q_virtual).T
+
+
+#v = np.matrix(np.zeros(robot.nv)).transpose()  # joint velocity
+
+v = np.matrix(mj.qdotvirtual).T
 
 # robot_display.displayCollisions(False)
 # robot_display.displayVisuals(True)
@@ -157,6 +162,10 @@ solver.resize(invdyn.nVar, invdyn.nEq, invdyn.nIn)
 
 tsid_act = False
 
+#print(type(mj.q))
+#print(len(mj.q))
+mj.simTogglePlay()
+
 while (not rospy.is_shutdown()):
     if kbd.kbhit():
         key = kbd.getch()
@@ -186,6 +195,9 @@ while (not rospy.is_shutdown()):
             postureTask.setReference(samplePosture)
             sampleRightFoot = rightFootTraj.computeNext()
             rightFootTask.setReference(sampleRightFoot)
+
+            #q = np.matrix(mj.q_virtual).T
+           # v = np.matrix(mj.qdotvirtual).T
 
             HQPData = invdyn.computeProblemData(t, q, v)
             if i == 0:
@@ -222,8 +234,8 @@ while (not rospy.is_shutdown()):
             if(time_spent < dt):
                 time.sleep(dt-time_spent)
 
-            assert norm(dv) < 1e6
-            assert norm(v) < 1e6
+            # assert norm(dv) < 1e6
+            # assert norm(v) < 1e6
 
         print "\nFinal COM Position  ", robot.com(invdyn.data()).T
         print "Desired COM Position", com_ref.T

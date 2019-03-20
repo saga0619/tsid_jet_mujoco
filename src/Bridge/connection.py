@@ -37,9 +37,11 @@ class mujoco:
         self.jointSet_msg.position = [0.0] * cf.dof
         self.jointSet_msg.torque = [0.0] * cf.dof
 
-        self.q = np.array(np.zeros(cf.dof))
-        self.qdot = np.array(np.zeros(cf.dof))
-        self.torque = np.array(np.zeros(cf.dof))
+        self.q = np.zeros(cf.dof)
+        self.q_virtual = np.zeros(7+cf.dof)
+        self.qdot = np.zeros(cf.dof)
+        self.qdotvirtual = np.zeros(cf.dof+6)
+        self.torque = np.zeros(cf.dof)
         self.joint_names_mj = [''] * cf.dof
 
         self.mujoco_ready = False
@@ -66,6 +68,7 @@ class mujoco:
             r = rospy.Rate(100)
             while ((not self.mujoco_init_receive) & (not rospy.is_shutdown())):
                 r.sleep()
+            self.mujoco_init_receive = False
         if msg.data == "INIT":
             print('init check')
             self.mujoco_init_receive = True
@@ -79,6 +82,12 @@ class mujoco:
                     self.qdot[i] = msg.velocity[j+6]
                     #self.torque[i] = msg.effort[j+6]
             self.joint_names_mj[i] = msg.name[i + 6]
+        for i in range(6):
+            self.q_virtual[i] = msg.position[i]
+            self.qdotvirtual[i] = msg.velocity[i]
+        self.qdotvirtual[6:] = self.qdot
+        self.q_virtual[6] = msg.position[cf.dof+6]
+        self.q_virtual[7:] = self.q
 
     def simTimeCallback(self, msg):
         self.mj_time = msg.data
