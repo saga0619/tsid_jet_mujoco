@@ -21,7 +21,7 @@ class mujoco:
         self.setjoint = rospy.Publisher(
             '/mujoco_ros_interface/joint_set', MujocoJointSet, queue_size=1)
         self.simcommandpub = rospy.Publisher(
-            '/mujoco_ros_interface/sim_command_con2sim', String, queue_size=1)
+            '/mujoco_ros_interface/sim_command_con2sim', String, queue_size=10)
         self.simcommandsub = rospy.Subscriber(
             '/mujoco_ros_interface/sim_command_sim2con', String, self.simCommandCallback)
 
@@ -55,6 +55,10 @@ class mujoco:
         while ((not self.mujoco_ready) & (not rospy.is_shutdown())):
             r.sleep()
             print('waiting : please reset mujoco with backspace')
+        while ((not self.mujoco_init_receive) & (not rospy.is_shutdown())):
+            print("waiting in while")
+            r.sleep()
+        self.mujoco_init_receive = False
         self.mujoco_ready = False
 
     def simCommandCallback(self, msg):
@@ -65,10 +69,7 @@ class mujoco:
             print('reset check')
             self.mujoco_ready = True
             self.simcommandpub.publish('RESET')
-            r = rospy.Rate(100)
-            while ((not self.mujoco_init_receive) & (not rospy.is_shutdown())):
-                r.sleep()
-            self.mujoco_init_receive = False
+            r = rospy.Rate(10)
         if msg.data == "INIT":
             print('init check')
             self.mujoco_init_receive = True

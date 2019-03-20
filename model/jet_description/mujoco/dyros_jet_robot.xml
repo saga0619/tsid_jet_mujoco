@@ -26,7 +26,7 @@
 
 	</default>
 	
-        <option  timestep='0.0005'/>
+        <option  timestep='0.00025'/>
 	
     <asset>
         <mesh name="base_link" file="base_link.stl" />

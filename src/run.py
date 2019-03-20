@@ -167,6 +167,10 @@ tsid_act = False
 mj.simTogglePlay()
 
 while (not rospy.is_shutdown()):
+    #print("q")
+    #print(q)
+    #print("qref")
+    #print(q_ref)
     if kbd.kbhit():
         key = kbd.getch()
         if key == '\t':  # TAB
