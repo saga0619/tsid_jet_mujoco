@@ -8,7 +8,7 @@
 
   <node name="mujoco_ros" pkg="mujoco_ros" type="mujoco_ros" required="true" respawn="false" output="screen">
     <param name="license" type="string" value="$(find tsid_jet_mujoco)/../../../mjkey.txt" />
-    <param name="model_file" type="string" value='$(find tsid_jet_mujoco)/model/jet_description/mujoco/dyros_jet_robot_low.xml'/>
+    <param name="model_file" type="string" value='$(find tsid_jet_mujoco)/model/jet_description/mujoco/dyros_jet_robot.xml'/>
   </node>
 
 </launch>
