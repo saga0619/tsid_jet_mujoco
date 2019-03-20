@@ -1,5 +1,5 @@
 # tsid jet mujoco
-tsid demo to jet with mujoco
+tsid demo for jet with mujoco
 
 ## Installation
 * clone this Repository and [mujoco_ros Repository](https://github.com/saga0619/mujoco_ros_sim) to your ros workspace (commonly at catkin_ws)
