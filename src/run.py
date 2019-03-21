@@ -12,6 +12,7 @@ import commands
 from pinocchio.utils import np, zero
 from Bridge import connection
 from Bridge import kbhit
+from Bridge import configuration
 import rospy
 
 
@@ -46,18 +47,21 @@ kp_com = 30.0                   # proportional gain of center of mass task
 kp_posture = 30.0               # proportional gain of joint posture task
 kp_RF = 30.0                    # proportional gain of right foot motion task
 # remove right foot contact constraint after REMOVE_CONTACT_N time steps
-REMOVE_CONTACT_N = 100
+REMOVE_CONTACT_N = 50
 # duration of the contact transition (to smoothly get a zero contact force before removing a contact constraint)
 CONTACT_TRANSITION_TIME = 1.0
 # distance between initial and desired center of mass position in y direction
-DELTA_COM_Y = 0.1
+DELTA_COM_Y = 0.127
+DELTA_COM_X = -0.022
 DELTA_FOOT_X = 0.2
 DELTA_FOOT_Z = 0.2              # desired elevation of right foot in z direction
-dt = 0.001                      # controller time step
-PRINT_N = 500                   # print every PRINT_N time steps
+dt = 0.002                      # controller time step
+PRINT_N = 250                   # print every PRINT_N time steps
 # update robot configuration in viwewer every DISPLAY_N time steps
 DISPLAY_N = 25
-N_SIMULATION = 4000             # number of time steps simulated
+N_SIMULATION = 2000             # number of time steps simulated
+
+JOINT_UPDATE_N = 100            # Current joint state update period
 
 filename = str(os.path.dirname(os.path.abspath(__file__)))
 path = filename + '/../model/jet_description'
@@ -66,6 +70,8 @@ vector = se3.StdVec_StdString()
 vector.extend(item for item in path)
 robot = tsid.RobotWrapper(urdf, vector, se3.JointModelFreeFlyer(), False)
 srdf = path + '/srdf/dyros_jet_robot.srdf'
+
+tsid2_act = False
 
 # for gepetto viewer .. but Fix me!!
 # robot_display = se3.RobotWrapper.BuildFromURDF(urdf, [path, ], se3.JointModelFreeFlyer())
@@ -149,6 +155,7 @@ H_rf_ref.translation += np.matrix([DELTA_FOOT_X, 0., DELTA_FOOT_Z]).T
 rightFootTraj = tsid.TrajectorySE3Constant("traj-right-foot", H_rf_ref)
 
 com_ref = robot.com(data)
+com_ref[0] += DELTA_COM_X
 com_ref[1] += DELTA_COM_Y
 trajCom = tsid.TrajectoryEuclidianConstant("traj_com", com_ref)
 
@@ -160,17 +167,14 @@ solver = tsid.SolverHQuadProg("qp solver")
 
 solver.resize(invdyn.nVar, invdyn.nEq, invdyn.nIn)
 
-tsid_act = False
 
-#print(type(mj.q))
-#print(len(mj.q))
+time.sleep(1)
+
 mj.simTogglePlay()
 
+tsid_act = False
+
 while (not rospy.is_shutdown()):
-    #print("q")
-    #print(q)
-    #print("qref")
-    #print(q_ref)
     if kbd.kbhit():
         key = kbd.getch()
         if key == '\t':  # TAB
@@ -200,8 +204,9 @@ while (not rospy.is_shutdown()):
             sampleRightFoot = rightFootTraj.computeNext()
             rightFootTask.setReference(sampleRightFoot)
 
-            #q = np.matrix(mj.q_virtual).T
-           # v = np.matrix(mj.qdotvirtual).T
+            if i % JOINT_UPDATE_N == 0:   # current joint status update period
+                q = np.matrix(mj.q_virtual).T
+                v = np.matrix(mj.qdotvirtual).T                
 
             HQPData = invdyn.computeProblemData(t, q, v)
             if i == 0:
@@ -210,6 +215,7 @@ while (not rospy.is_shutdown()):
             sol = solver.solve(HQPData)
             tau = invdyn.getActuatorForces(sol)
             dv = invdyn.getAccelerations(sol)
+
 
             if i % PRINT_N == 0:
                 print "Time %.3f" % (t)
@@ -237,9 +243,16 @@ while (not rospy.is_shutdown()):
             time_spent = time.time() - time_start
             if(time_spent < dt):
                 time.sleep(dt-time_spent)
+            else:
+                print "step : {step} time : {time_}".format(step=i,time_=time_spent)
 
-            # assert norm(dv) < 1e6
-            # assert norm(v) < 1e6
+
+
+            assert norm(dv) < 1e6
+            assert norm(v) < 1e6
+
+        tsid_act = False
+        mj.simTogglePlay()
 
         print "\nFinal COM Position  ", robot.com(invdyn.data()).T
         print "Desired COM Position", com_ref.T

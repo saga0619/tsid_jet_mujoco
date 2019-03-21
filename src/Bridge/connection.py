@@ -26,11 +26,11 @@ class mujoco:
             '/mujoco_ros_interface/sim_command_sim2con', String, self.simCommandCallback)
 
         self.jointStateSub = rospy.Subscriber(
-            '/mujoco_ros_interface/joint_states', JointState, self.jointStateCallback, tcp_nodelay=True)
+            '/mujoco_ros_interface/joint_states', JointState, self.jointStateCallback, queue_size=1,tcp_nodelay=True)
         self.simTimeSub = rospy.Subscriber(
             '/mujoco_ros_interface/sim_time', Float32, self.simTimeCallback, tcp_nodelay=True)
         self.sensorStateSub = rospy.Subscriber(
-            '/mujoco_ros_interface/sensor_states', MujocoSensorState, self.sensorStateCallback, tcp_nodelay=True)
+            '/mujoco_ros_interface/sensor_states', MujocoSensorState, self.sensorStateCallback, queue_size=1,tcp_nodelay=True)
 
         self.jointSet_msg = MujocoJointSet()
         self.jointSet_msg.MODE = 0  # Position mode 0 Torque mode 1
@@ -43,6 +43,7 @@ class mujoco:
         self.qdotvirtual = np.zeros(cf.dof+6)
         self.torque = np.zeros(cf.dof)
         self.joint_names_mj = [''] * cf.dof
+        self.rcv = 0
 
         self.mujoco_ready = False
         self.mujoco_init_receive = False
